@@ -15,3 +15,16 @@ const configuration = new Configuration({
 });
 
 const openai = new OpenAIApi(configuration);
+
+exports.helloworld = functions.https.onRequest(async (request, response) => {
+  const gptCompletion = await openai.createCompletion('text-davinci-001', {
+    prompt: `${tweets} Jim Cramer recommends selling the following stock tickers: `,
+    temperature: 0.7,
+    max_tokens: 32,
+    top_p: 1,
+    frequency_penalty: 0,
+    presence_penalty: 0,
+  });
+
+  response.send(gptCompletion.data);
+});
