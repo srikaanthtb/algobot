@@ -14,6 +14,30 @@ const configuration = new Configuration({
   apikey: functions.config.openai.key,
 });
 
+
+const puppeteer = require('puppeteer');
+
+async function scrape() {
+  const browser = await puppeteer.launch();
+  const page = await browser.newPage();
+
+  await page.goto('https://twitter.com/jimcramer', {
+    waitUntil: 'networkidle2',
+  });
+
+  await page.waitForTimeout(3000);
+
+  // await page.screenshot({ path: 'example.png' });
+
+  const tweets = await page.evaluate(async () => {
+    return document.body.innerText;
+  });
+
+  await browser.close();
+
+  return tweets;
+}
+
 const openai = new OpenAIApi(configuration);
 
 exports.helloworld = functions.https.onRequest(async (request, response) => {
