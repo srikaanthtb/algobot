@@ -14,6 +14,12 @@ const configuration = new Configuration({
   apikey: functions.config.openai.key,
 });
 
+const Alpaca = require('@alpacahq/alpaca-trade-api');
+const alpaca = new Alpaca({
+  keyId: functions.config().alpaca.id,  // set as environment variables in firebase
+  secretKey: functions.config().alpaca.key, 
+  // paper: true, to use the paper account for testing uncomment this line
+});
 
 const puppeteer = require('puppeteer');
 
