@@ -52,3 +52,27 @@ exports.helloworld = functions.https.onRequest(async (request, response) => {
 
   response.send(gptCompletion.data);
 });
+
+//// ALPACA Make Trades ////
+
+    // close all positions
+    const cancel = await alpaca.cancelAllOrders();
+    const liquidate = await alpaca.closeAllPositions();
+
+    // get account
+    const account = await alpaca.getAccount();
+    console.log(`buying power: ${account.buying_power}`);
+
+    // place order
+    const order = await alpaca.createOrder({
+      symbol: stocksToBuy[0],
+      // qty: 1,
+      notional: account.buying_power * 0.9, // will buy fractional shares
+      side: 'buy',
+      type: 'market',
+      time_in_force: 'day', // trade only lasts for day
+    });
+
+    console.log(`stocks bought: ${order.id}`);
+
+    return null;
