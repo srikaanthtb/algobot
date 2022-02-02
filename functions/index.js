@@ -21,6 +21,14 @@ const alpaca = new Alpaca({
   // paper: true, to use the paper account for testing uncomment this line
 });
 
+// cron job to automate trades
+exports.getRichQuick = functions
+  .runWith({ memory: '4GB' })
+  .pubsub.schedule('0 10 * * 1-5')
+  .timeZone('America/New_York')
+  .onRun(async (ctx) => {
+    console.log('This will run M-F at 10:00 AM Eastern!');
+
 const puppeteer = require('puppeteer');
 
 async function scrape() {
