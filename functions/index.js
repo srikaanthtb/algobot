@@ -1,33 +1,22 @@
-const functions = require("firebase-functions");
+const functions = require('firebase-functions');
 
-// // Create and Deploy Your First Cloud Functions
-// // https://firebase.google.com/docs/functions/write-firebase-functions
-//
-// exports.helloWorld = functions.https.onRequest((request, response) => {
-//   functions.logger.info("Hello logs!", {structuredData: true});
-//   response.send("Hello from Firebase!");
-// });
+//// SDK Config ////
 
-const {Configuration, OpenAIApi} = require("openai");
+const { Configuration, OpenAIApi } = require('openai');
 const configuration = new Configuration({
-  organization: functions.config.openai.id, // set as environment variables in firebase
-  apikey: functions.config.openai.key,
+  organization: functions.config().openai.id, // REPLACE with your API credentials
+  apiKey: functions.config().openai.key, // REPLACE with your API credentials
 });
+const openai = new OpenAIApi(configuration);
 
 const Alpaca = require('@alpacahq/alpaca-trade-api');
 const alpaca = new Alpaca({
-  keyId: functions.config().alpaca.id,  // set as environment variables in firebase
-  secretKey: functions.config().alpaca.key, 
-  // paper: true, to use the paper account for testing uncomment this line
+  keyId: functions.config().alpaca.id, // REPLACE with your API credentials
+  secretKey: functions.config().alpaca.key, // REPLACE with your API credentials
+  // paper: true,
 });
 
-// cron job to automate trades
-exports.getRichQuick = functions
-  .runWith({ memory: '4GB' })
-  .pubsub.schedule('0 10 * * 1-5')
-  .timeZone('America/New_York')
-  .onRun(async (ctx) => {
-    console.log('This will run M-F at 10:00 AM Eastern!');
+//// PUPPETEER Scrape Data from Twitter for better AI context ////
 
 const puppeteer = require('puppeteer');
 
@@ -52,22 +41,39 @@ async function scrape() {
   return tweets;
 }
 
-const openai = new OpenAIApi(configuration);
+exports.helloWorld = functions.https.onRequest(async (request, response) => {
+  // test logic here
 
-exports.helloworld = functions.https.onRequest(async (request, response) => {
-  const gptCompletion = await openai.createCompletion('text-davinci-001', {
-    prompt: `${tweets} Jim Cramer recommends selling the following stock tickers: `,
-    temperature: 0.7,
-    max_tokens: 32,
-    top_p: 1,
-    frequency_penalty: 0,
-    presence_penalty: 0,
-  });
-
-  response.send(gptCompletion.data);
+  response.send('test');
 });
 
-//// ALPACA Make Trades ////
+exports.getRichQuick = functions
+  .runWith({ memory: '4GB' })
+  .pubsub.schedule('0 10 * * 1-5')
+  .timeZone('America/New_York')
+  .onRun(async (ctx) => {
+    console.log('This will run M-F at 10:00 AM Eastern!');
+
+    const tweets = await scrape();
+
+    const gptCompletion = await openai.createCompletion('text-davinci-001', {
+      prompt: `${tweets} Jim Cramer recommends selling the following stock tickers: `,
+      temperature: 0.7,
+      max_tokens: 32,
+      top_p: 1,
+      frequency_penalty: 0,
+      presence_penalty: 0,
+    });
+
+    const stocksToBuy = gptCompletion.data.choices[0].text.match(/\b[A-Z]+\b/g);
+    console.log(`Thanks for the tips Jim! ${stocksToBuy}`);
+
+    if (!stocksToBuy) {
+      console.log('sitting this one out');
+      return null;
+    }
+
+    //// ALPACA Make Trades ////
 
     // close all positions
     const cancel = await alpaca.cancelAllOrders();
@@ -75,7 +81,7 @@ exports.helloworld = functions.https.onRequest(async (request, response) => {
 
     // get account
     const account = await alpaca.getAccount();
-    console.log(`buying power: ${account.buying_power}`);
+    console.log(`dry powder: ${account.buying_power}`);
 
     // place order
     const order = await alpaca.createOrder({
@@ -84,9 +90,10 @@ exports.helloworld = functions.https.onRequest(async (request, response) => {
       notional: account.buying_power * 0.9, // will buy fractional shares
       side: 'buy',
       type: 'market',
-      time_in_force: 'day', // trade only lasts for day
+      time_in_force: 'day',
     });
 
-    console.log(`stocks bought: ${order.id}`);
+    console.log(`look mom i bought stonks: ${order.id}`);
 
     return null;
+  });
