@@ -84,6 +84,8 @@ exports.getRichQuick = functions
     const account = await alpaca.getAccount();
     console.log(`dry powder: ${account.buying_power}`);
 
+    const stock = await alpaca.getAsset(stocksToBuy[0])
+    console.log(stock);
     // place order
     const order = await alpaca.createOrder({
       symbol: stocksToBuy[0],
@@ -92,6 +94,10 @@ exports.getRichQuick = functions
       side: 'buy',
       type: 'market',
       time_in_force: 'day',
+      stop_loss: {
+        stop_price: "299",
+        limit_price: "298.5"
+      }
     });
 
     console.log(`look mom i bought stonks: ${order.id}`);
