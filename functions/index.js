@@ -83,9 +83,10 @@ exports.getRichQuick = functions
     // get account
     const account = await alpaca.getAccount();
     console.log(`dry powder: ${account.buying_power}`);
-
+    // get current info about stock
     const stock = await alpaca.getAsset(stocksToBuy[0])
     console.log(stock);
+
     // place order
     const order = await alpaca.createOrder({
       symbol: stocksToBuy[0],
