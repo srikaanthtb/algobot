@@ -16,7 +16,7 @@
     "@alpacahq/alpaca-trade-api": "^2.14.0",
     "eslint-plugin-async-await": "^0.0.0",
     "firebase-admin": "^10.0.2",
-    "firebase-functions": "^3.17.2",
+    "firebase-functions": "^3.20.1",
     "openai": "^2.0.5",
     "puppeteer": "^13.1.2"
   },
