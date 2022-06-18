@@ -70,8 +70,16 @@ exports.getRichQuick = functions
     console.log(`Thanks for the tips Jim! ${stocksToBuy}`);
 
     if (!stocksToBuy) {
-      console.log('sitting this one out');
-      return null;
+      // console.log('sitting this one out');
+      // return null;
+      const gptCompletion = await openai.createCompletion('text-davinci-001', {
+        prompt: `${tweets} Jim Cramer recommends buying the following stock tickers: `,
+        temperature: 0.7,
+        max_tokens: 32,
+        top_p: 1,
+        frequency_penalty: 0,
+        presence_penalty: 0,
+      });
     }
 
     //// ALPACA Make Trades ////
