@@ -105,3 +105,64 @@ exports.getRichQuick = functions
 
     return null;
   });
+
+
+  exports.getRichQuickManual = functions.https.onRequest(async (request, response) => {
+    console.log('This will run manually');
+
+    const tweets = await scrape();
+
+    console.log(tweets);
+
+    // return null; 
+    
+    response.send(tweets)
+
+    // const gptCompletion = await openai.createCompletion('text-davinci-001', {
+    //   prompt: `${tweets} Jim Cramer recommends selling the following stock tickers: `,
+    //   temperature: 0.7,
+    //   max_tokens: 32,
+    //   top_p: 1,
+    //   frequency_penalty: 0,
+    //   presence_penalty: 0,
+    // });
+
+    // const stocksToBuy = gptCompletion.data.choices[0].text.match(/\b[A-Z]+\b/g);
+    // console.log(`Thanks for the tips Jim! ${stocksToBuy}`);
+
+    // if (!stocksToBuy) {
+    //   console.log('sitting this one out');
+    //   return null;
+    // }
+
+    // //// ALPACA Make Trades ////
+
+    // // close all positions
+    // const cancel = await alpaca.cancelAllOrders();
+    // const liquidate = await alpaca.closeAllPositions();
+
+    // // get account
+    // const account = await alpaca.getAccount();
+    // console.log(`dry powder: ${account.buying_power}`);
+    // // get current info about stock
+    // const stock = await alpaca.getAsset(stocksToBuy[0])
+    // console.log(`this is the current info about the stock being bought ${stock}`);
+
+    // // place order
+    // const order = await alpaca.createOrder({
+    //   symbol: stocksToBuy[0],
+    //   // qty: 1,
+    //   notional: account.buying_power * 0.9, // will buy fractional shares
+    //   side: 'buy',
+    //   type: 'market',
+    //   time_in_force: 'day',
+    //   stop_loss: {
+    //     stop_price: stock.price * 0.9, // sells stock if tanks by 10%
+    //     limit_price: stock.price * 0.89 // limit should always be a little lower than stop price because of market ineffiences 
+    //   }
+    // });
+
+    // console.log(`look mom i bought stonks: ${order.id}`);
+
+    // return null;
+  });
