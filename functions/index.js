@@ -21,27 +21,24 @@ const alpaca = new Alpaca({
 
 const puppeteer = require('puppeteer');
 
-// async function getChildren(element) {
-//   try {
-//     const handle = await element.evaluateHandle((node) => node.children)
-//     const handleProp = await handle.getProperties()
-//     // const childs = []
-//     for (const prop of handleProp.values()) {
-//       const ele = prop.asElement()
-//       if (ele) {
-//         // children.push(ele)
-//         console.log("\n\n\n\nelement");
-//         console.log(await element.evaluate((x) => x.innerHTML))
-//         await getChildren(ele)
-//       }
-//     }
-//   }
-//   catch {
-//     console.log('could not get children')
-//   }
-  
+async function autoScroll(page){
+  await page.evaluate(async () => {
+      await new Promise((resolve, reject) => {
+          var totalHeight = 0;
+          var distance = 100;
+          var timer = setInterval(() => {
+              var scrollHeight = 10000; //document.body.scrollHeight;
+              window.scrollBy(0, distance);
+              totalHeight += distance;
 
-// }
+              if(totalHeight >= scrollHeight - window.innerHeight){
+                  clearInterval(timer);
+                  resolve();
+              }
+          }, 100);
+      });
+  });
+}
 
 async function scrape() {
   const browser = await puppeteer.launch({headless: false});
@@ -50,6 +47,11 @@ async function scrape() {
   await page.goto('https://twitter.com/jimcramer', {
     waitUntil: 'networkidle2',
   });
+
+  await page.setViewport({
+    width: 1200,
+    height: 800
+});
 
   await page.waitForTimeout(3000);
 
@@ -61,7 +63,23 @@ async function scrape() {
 
   //console.log(tweets)
 
-  const divs = await page.$$('div[data-testid="cellInnerDiv"]')
+  let divs = await page.$$('div[data-testid="cellInnerDiv"]')
+
+  console.log(divs.length)
+
+  // await page.evaluate( () => {
+  //   window.scrollBy(0, 800)
+  // })
+
+  // await page.waitForTimeout(3000)
+
+  await autoScroll(page)
+
+  let newDivs = await page.$$('div[data-testid="cellInnerDiv"]')
+
+  newDivs.forEach( (div)  => divs.push(div))
+
+  console.log(divs.length)
 
   const tweets = new Array();
 
@@ -76,94 +94,6 @@ async function scrape() {
       tweets.push(tweetText)
     }
   }
-
-  // const listHandle = await page.evaluateHandle(() => document.body.children);
-  // const properties = await listHandle.getProperties();
-  // const children = [];
-  // for (const property of properties.values()) {
-  //   const element = property.asElement();
-    
-  //   if (element) {
-
-  //     await getChildren(element)
-
-  //     console.log("\n\n\n\nelement");
-  //     console.log(await element.evaluate((x) => x.innerHTML))
-  //     children.push(element);
-  //   }
-  // }
-  // children;
-
-
-
-  // const listHandle = await page.evaluateHandle(() => document.body.children);
-  //     const properties = await listHandle.getProperties();
-  //     const children = [];
-  //     for (const property of properties.values()) {
-  //       console.log(await property.jsonValue())
-  //       const element = property.asElement();
-  //       if (element) children.push(element);
-  //     }
-  //     children; 
-  // // const text = await header.()
-
-  // console.log("Test log start")
-  // console.log(await header[0].evaluate(node => node.innerText))
-  // console.log("Test log finish")
-
-//   console.log("Test log start")
-//   // console.log(await header[0].evaluate(node => node.))
-  
-//   // let divProperties = new Array()
-
-//   // divs.forEach( async uniqueDiv => {
-//   //   try {
-//   //     const properties = await uniqueDiv.getProperties()
-//   //     // divProperties.push(properties)
-//   //     // const listHandle = await page.evaluateHandle(() => document.body.children);
-//   //     // const properties = await listHandle.getProperties();
-//   //     const children = [];
-//   //     for (const property of properties.values()) {
-//   //       console.log(await property.jsonValue())
-//   //       const element = property.asElement();
-//   //       if (element) children.push(element);
-//   //     }
-//   //     children;
-
-//   //     // console.log(children)
-//   //   }
-//   //   catch {
-//   //     console.log("errored out")
-//   //   }
-//   // })
-
-
-//  // divProperties.forEach( y => y.forEach(z => console.log(z)))
-
-
-//     // const proper = await header[0]
-//     // proper.forEach((value, key)=> console.log(key + value))// + ' : ' + key))
-//     // const filteredDivs = header.filter( (elementhandle) => elementhandle. )
-//   console.log("Test log finish")
-
-
-  // const innerDivs = header.map(async elementHand => await elementHand.evaluate(node => node.innerText))
-  // innerDivs.forEach(x => console.log(x))
-  // console.log(tweetsTwo.length)
-  // const tweetsTrimmed = tweetsTwo//.filter(x => x.$('[data-testid="cellInnerDiv"]'))
-  // // console.log(tweetsTrimmed.length)
-
-  // const text = tweetsTrimmed.map((node) => node.jsonValue())
-  
-  // text.forEach( (x) => console.log(x))
-
-  // console.log(text)
-
-  // tweetsTrimmed.forEach(async x => {
-  //   console.log("\nDiv:")  
-  //   console.log(await x.evaluate(x => x.innerText))
-  //   }
-  //   )
 
   await browser.close();
 
@@ -253,8 +183,8 @@ exports.getRichQuickManual = functions.https.onRequest(async (request, response)
 
   const tweets = await scrape();
 
-  tweets.push("finally the seller of AMD is done.. amen")
-  tweets.push("I wonder what rabbit Michael Saylor can pull out of a hat with his Microstrategy  gameplan. I wonder when he first raised money if he had this in mind...")
+  // tweets.push("finally the seller of AMD is done.. amen")
+  // tweets.push("I wonder what rabbit Michael Saylor can pull out of a hat with his Microstrategy  gameplan. I wonder when he first raised money if he had this in mind...")
 
   console.log("\n\nArray of Tweets")
   console.log(tweets);
@@ -264,7 +194,7 @@ exports.getRichQuickManual = functions.https.onRequest(async (request, response)
   // console.log(tweets)
 
   // const prompt = `${tweets} Jim Cramer recommends selling the following stock tickers: `
-  const prompt = `What stock should be sold from the following tweets? ${tweets.join("\n")}`
+  const prompt = `What stock ticker should be bought from the following tweets? ${tweets.join("\n")}`
   const prompt2 = `Stock ticker: ${tweets}`
   
   console.log('\n\nPrompt to OpenAI')
@@ -340,7 +270,7 @@ exports.getRichQuickManual = functions.https.onRequest(async (request, response)
   // else {
     // // //// ALPACA Make Trades ////
 
-    // // // close all positions
+    // // // close all positions (not needed as there is now sell logic which closes positions if needs be)
     // const cancel = await alpaca.cancelAllOrders();
     // const liquidate = await alpaca.closeAllPositions();
 
