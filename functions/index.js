@@ -253,72 +253,135 @@ exports.getRichQuickManual = functions.https.onRequest(async (request, response)
 
   const tweets = await scrape();
 
+  tweets.push("finally the seller of AMD is done.. amen")
+  tweets.push("I wonder what rabbit Michael Saylor can pull out of a hat with his Microstrategy  gameplan. I wonder when he first raised money if he had this in mind...")
+
+  console.log("\n\nArray of Tweets")
   console.log(tweets);
   // response.send(tweets);
   // return null; 
   
   // console.log(tweets)
 
-  const prompt = `${tweets} Jim Cramer recommends selling the following stock tickers: `
+  // const prompt = `${tweets} Jim Cramer recommends selling the following stock tickers: `
+  const prompt = `What stock should be sold from the following tweets? ${tweets.join("\n")}`
   const prompt2 = `Stock ticker: ${tweets}`
   
+  console.log('\n\nPrompt to OpenAI')
   console.log(prompt)
 
   const gptCompletion = await openai.createCompletion(
     {
     model: 'text-davinci-001', 
-    prompt: prompt2,
+    prompt: prompt,
     temperature: 0.7,
-    max_tokens: 32,
+    max_tokens: 320,
     top_p: 1,
     frequency_penalty: 0,
     presence_penalty: 0,
   });
 
-  const stocksToBuy = gptCompletion.data.choices[0].text.match(/\b[A-Z]+\b/g);
-  // response.send(gptCompletion.data.choices)
+  let stocksToBuy;
+  try {
+    stocksToBuy = gptCompletion.data.choices[0].text.match(/\b[A-Z]+\b/g);
+    // response.send(gptCompletion.data.choices)
+    console.log('\n\nResponse from OpenAI')
+    console.log(gptCompletion.data.choices[0].text)
+    
+    console.log('\n\n Array of stocks')
+    console.log(stocksToBuy)
+
+  }
+  catch {
+    console.log("gptCompletion did not go well")
+  }
+
+  // if (!stocksToBuy) {
+  //   console.log('sitting this one out');
+  //   response.send('sitting this one out - no tips - not helpful JIM!')
+  // }
+  // else {
+  //   console.log(`Thanks for the tips Jim! ${stocksToBuy}`);
+  //   response.send(`Thanks for the tips Jim! ${stocksToBuy}`)
+  // }
 
   if (!stocksToBuy) {
-    console.log('sitting this one out');
-    response.send('sitting this one out - no tips - not helpful JIM!')
+    // sell logic if cramer recommends buying a stock you hold
+    console.log('\n\nJim Cramer is trying to buy stocks, sell everything!');
+    // return null;
+    const gptCompletion = await openai.createCompletion({
+      model: 'text-davinci-001', 
+      prompt: `${tweets} Jim Cramer recommends buying the following stock tickers: `,
+      temperature: 0.7,
+      max_tokens: 320,
+      top_p: 1,
+      frequency_penalty: 0,
+      presence_penalty: 0,
+    });
+    let stocksToSell
+    try {
+      stocksToSell = gptCompletion.data.choices[0].text.match(/\b[A-Z]+\b/g);
+    }
+    catch {
+      console.log("gptCompletion did not go well")
+    }
+    console.log(`Thanks for the tips Jim! ${stocksToSell}`);
+    // if a match is found sell it (assuming 1 position is held)
+    const currentPosition = await alpaca.getPositions()
+    if (currentPosition.includes(stocksToSell)) {
+      console.log(`this is being sold: ${stocksToSell}`)
+      const yeet = await alpaca.closeAllPositions();
+    }
+    
+    console.log(`look mom i sold all my stonks`)
+    response.send(`look mom i sold stonks: ${stocksToSell}`)
+    return
   }
-  else {
-    console.log(`Thanks for the tips Jim! ${stocksToBuy}`);
-    response.send(`Thanks for the tips Jim! ${stocksToBuy}`)
-  }
+  // else {
+    // // //// ALPACA Make Trades ////
 
-  // // //// ALPACA Make Trades ////
+    // // // close all positions
+    // const cancel = await alpaca.cancelAllOrders();
+    // const liquidate = await alpaca.closeAllPositions();
 
-  // // // close all positions
-  const cancel = await alpaca.cancelAllOrders();
-  const liquidate = await alpaca.closeAllPositions();
+    // get account
 
-  // get account
-  const account = await alpaca.getAccount();
-  console.log(`dry powder: ${account.buying_power}`);
-  // get current info about stock
-  const stock = await alpaca.getAsset(stocksToBuy[0])
-  console.log(`this is the current info about the stock being bought ${stock}`);
+    try {
+      const account = await alpaca.getAccount();
+      console.log(`dry powder: ${account.buying_power}`);
+      // get current info about stock
+      
+      const stock = await alpaca.getAsset(stocksToBuy[0])
+      console.log(`this is the current info about the stock being bought ${stock}`);
+  
+      // place order
+      const order = await alpaca.createOrder({
+        symbol: stocksToBuy[0],
+        // qty: 1,
+        notional: account.buying_power * 0.001, // will buy fractional shares
+        side: 'buy',
+        type: 'market',
+        time_in_force: 'day',
+        // stop_loss: {
+        //   stop_price: stock.price * 0.9, // sells stock if tanks by 10%
+        //   limit_price: stock.price * 0.89 // limit should always be a little lower than stop price because of market ineffiences 
+        // }
+      });
+  
+      console.log(`look mom i bought stonks: ${order.symbol} qty: ${order.notional} @ ${order.filled_avg_price}. OrderID = ${order.id}`);
+  
+      // console.log(JSON.stringify(order))
+  
+      response.send(`look mom i bought stonks: ${order.symbol} qty: ${order.notional} @ ${order.filled_avg_price}. OrderID = ${order.id}`);
+  
+    }
+    catch 
+    {
+      console.log("Could not process the buy order")
+      console.log(`look man i can't code in javascript to save my life`)
+      response.send(`Could not process the buy order\nlook man i can't code in javascript to save my life`)
 
-  // place order
-  const order = await alpaca.createOrder({
-    symbol: stocksToBuy[0],
-    // qty: 1,
-    notional: account.buying_power * 0.001, // will buy fractional shares
-    side: 'buy',
-    type: 'market',
-    time_in_force: 'day',
-    // stop_loss: {
-    //   stop_price: stock.price * 0.9, // sells stock if tanks by 10%
-    //   limit_price: stock.price * 0.89 // limit should always be a little lower than stop price because of market ineffiences 
-    // }
-  });
+    }
 
-  console.log(`look mom i bought stonks: ${order.symbol} qty: ${order.qty} @ ${order.filled_avg_price}. OrderID = ${order.id}`);
-
-  console.log(JSON.stringify(order))
-
-  response.send(`look mom i bought stonks: ${order.symbol} qty: ${order.notional} @ ${order.filled_avg_price}. OrderID = ${order.id}`);
-
-  response.send('finished')
+  // }
 });
