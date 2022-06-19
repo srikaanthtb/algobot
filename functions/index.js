@@ -80,6 +80,8 @@ exports.getRichQuick = functions
         frequency_penalty: 0,
         presence_penalty: 0,
       });
+      const stocksToSell = gptCompletion.data.choices[0].text.match(/\b[A-Z]+\b/g);
+      console.log(`Thanks for the tips Jim! ${stocksToSell}`);
     }
 
     //// ALPACA Make Trades ////
