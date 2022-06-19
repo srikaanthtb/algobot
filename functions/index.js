@@ -198,8 +198,25 @@ exports.getRichQuick = functions
     console.log(`Thanks for the tips Jim! ${stocksToBuy}`);
 
     if (!stocksToBuy) {
-      console.log('sitting this one out');
-      return null;
+      // sell logic if cramer recommends buying a stock you hold
+      // console.log('sitting this one out');
+      // return null;
+      const gptCompletion = await openai.createCompletion('text-davinci-001', {
+        prompt: `${tweets} Jim Cramer recommends buying the following stock tickers: `,
+        temperature: 0.7,
+        max_tokens: 32,
+        top_p: 1,
+        frequency_penalty: 0,
+        presence_penalty: 0,
+      });
+      const stocksToSell = gptCompletion.data.choices[0].text.match(/\b[A-Z]+\b/g);
+      console.log(`Thanks for the tips Jim! ${stocksToSell}`);
+      // if a match is found sell it (assuming 1 position is held)
+      const currentPosition = await alpaca.getPositions()
+      if (currentPosition.includes(stocksToSell)) {
+        console.log(`this is being sold: ${stocksToSell}`)
+        const yeet = await alpaca.closeAllPositions();
+      }
     }
 
     //// ALPACA Make Trades ////
@@ -223,10 +240,6 @@ exports.getRichQuick = functions
       side: 'buy',
       type: 'market',
       time_in_force: 'day',
-      stop_loss: {
-        stop_price: stock.price * 0.9, // sells stock if tanks by 10%
-        limit_price: stock.price * 0.89 // limit should always be a little lower than stop price because of market ineffiences 
-      }
     });
 
     console.log(`look mom i bought stonks: ${order.id}`);
