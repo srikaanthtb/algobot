@@ -95,10 +95,10 @@ exports.getRichQuick = functions
       side: 'buy',
       type: 'market',
       time_in_force: 'day',
-      stop_loss: {
-        stop_price: stock.price * 0.9, // sells stock if tanks by 10%
-        limit_price: stock.price * 0.89 // limit should always be a little lower than stop price because of market ineffiences 
-      }
+      // stop_loss: {
+      //   stop_price: stock.price * 0.9, // sells stock if tanks by 10%
+      //   limit_price: stock.price * 0.89 // limit should always be a little lower than stop price because of market ineffiences 
+      // }
     });
 
     console.log(`look mom i bought stonks: ${order.id}`);
