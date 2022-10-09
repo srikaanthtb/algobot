@@ -56,7 +56,7 @@ async function scrape() {
 
   await page.waitForTimeout(3000);
 
-  await page.screenshot({ path: './puppeteerArtifacts/example.png' });
+  // await page.screenshot({ path: './puppeteerArtifacts/example.png' });
 
 
   let divs = await page.$$('div[data-testid="cellInnerDiv"]')
