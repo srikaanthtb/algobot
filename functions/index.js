@@ -108,12 +108,12 @@ async function scrape() {
 
   return tweets;
 }
-exports.helloWorld = functions.https.onRequest(async (request, response) => {
+/* exports.helloWorld = functions.https.onRequest(async (request, response) => {
   // test logic here
 
   response.send('test');
 });
-
+ */
 exports.getRichQuick = functions
   .runWith({ memory: '4GB' })
   .pubsub.schedule('0 10 * * 1-5')
