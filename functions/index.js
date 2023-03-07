@@ -124,7 +124,7 @@ exports.getRichQuick = functions
     const tweets = await scrape();
 
     const gptCompletion = await openai.createCompletion({
-      model: "gpt-3.5-turbo",
+      model: "text-davinci-003",
       prompt: `${tweets} Jim Cramer recommends selling the following stock tickers: `,
       temperature: 0.7,
       max_tokens: 32,
