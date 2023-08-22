@@ -3,12 +3,12 @@ const functions = require('firebase-functions');
 
 //// SDK Config ////
 
-const { Configuration, OpenAIApi } = require('openai');
-const configuration = new Configuration({
+const OpenAI = require('openai');
+
+const openai = new OpenAI({
   organization: functions.config().openai.id, // REPLACE with your API credentials
-  apiKey: functions.config().openai.key, // REPLACE with your API credentials
+  apiKey: functions.config().openai.key // REPLACE with your API credentials
 });
-const openai = new OpenAIApi(configuration);
 
 const Alpaca = require('@alpacahq/alpaca-trade-api');
 const alpaca = new Alpaca({
@@ -123,7 +123,7 @@ exports.getRichQuick = functions
 
     const tweets = await scrape();
 
-    const gptCompletion = await openai.createCompletion({
+    const gptCompletion = await openai.completions.create({
       model: "text-davinci-003",
       prompt: `${tweets} Jim Cramer recommends selling the following stock tickers: `,
       temperature: 0.7,
@@ -133,7 +133,7 @@ exports.getRichQuick = functions
       presence_penalty: 0,
     });
 
-    const stocksToBuy = gptCompletion.data.choices[0].text.match(/\b[A-Z]+\b/g);
+    const stocksToBuy = gptCompletion.choices[0].text.match(/\b[A-Z]+\b/g);
     console.log(`Thanks for the tips Jim! ${stocksToBuy}`);
 
     if (!stocksToBuy) {
