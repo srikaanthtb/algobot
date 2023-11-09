@@ -109,24 +109,20 @@ async function scrape() {
   return tweets;
 }
 export const getRichQuick = runWith({ memory: '4GB' })
-  .pubsub.schedule('0 10 * * 1-5')
+  .pubsub.schedule('0 9 * * 1-5')
   .timeZone('America/New_York')
   .onRun(async (ctx) => {
-    console.log('This will run M-F at 10:00 AM Eastern!');
+    console.log('This will run M-F at 9:00 AM Eastern!');
 
     const tweets = await scrape();
 
-    const gptCompletion = await openai.completions.create({
-      model: "text-davinci-003",
-      prompt: `${tweets} Jim Cramer recommends selling the following stock tickers: `,
-      temperature: 0.7,
-      max_tokens: 32,
-      top_p: 1,
-      frequency_penalty: 0,
-      presence_penalty: 0,
+    const gptCompletion = await openai.chat.completions.create({
+      model: "gpt-3.5-turbo",
+      messages: [{"role": "system", "content": "You are a stock picker who looks at what jim cramer recommends selling and yourecommend buying those stocks"},
+              {"role": "user", "content": `${tweets} Jim Cramer recommends selling the following stock tickers: `}],
     });
 
-    const stocksToBuy = gptCompletion.choices[0].text.match(/\b[A-Z]+\b/g);
+    const stocksToBuy = gptCompletion.choices[0].message.content.match(/\b[A-Z]+\b/g);
     console.log(`Thanks for the tips Jim! ${stocksToBuy}`);
 
     if (!stocksToBuy) {
@@ -155,10 +151,9 @@ export const getRichQuick = runWith({ memory: '4GB' })
       side: 'buy',
       type: 'market',
       time_in_force: 'day',
-      // stop_loss: {
-      //   stop_price: stock.price * 0.9, // sells stock if tanks by 10%
-      //   limit_price: stock.price * 0.89 // limit should always be a little lower than stop price because of market ineffiences 
-      // }
+      extended_hours: true,
+      stop_price: stock.price * 0.9, // sells stock if tanks by 10%
+      limit_price: stock.price * 0.89 // limit should always be a little lower than stop price because of market ineffiences 
     });
 
     console.log(`look mom i bought stonks: ${order.id}`);
