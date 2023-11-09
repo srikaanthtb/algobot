@@ -1,25 +1,25 @@
 /* eslint-disable max-len */
-const functions = require('firebase-functions');
+import { config, runWith } from 'firebase-functions';
 
 //// SDK Config ////
 
-const OpenAI = require('openai');
+import OpenAI from 'openai';
 
 const openai = new OpenAI({
-  organization: functions.config().openai.id, // REPLACE with your API credentials
-  apiKey: functions.config().openai.key // REPLACE with your API credentials
+  organization: config().openai.id, // REPLACE with your API credentials
+  apiKey: config().openai.key // REPLACE with your API credentials
 });
 
-const Alpaca = require('@alpacahq/alpaca-trade-api');
+import Alpaca from '@alpacahq/alpaca-trade-api';
 const alpaca = new Alpaca({
-  keyId: functions.config().alpaca.id, // REPLACE with your API credentials
-  secretKey: functions.config().alpaca.key, // REPLACE with your API credentials
+  keyId: config().alpaca.id, // REPLACE with your API credentials
+  secretKey: config().alpaca.key, // REPLACE with your API credentials
   // paper: true,
 });
 
 //// PUPPETEER Scrape Data from Twitter for better AI context ////
 
-const puppeteer = require('puppeteer');
+import { launch } from 'puppeteer';
 
 /* async function scrape() {
   const browser = await puppeteer.launch();
@@ -61,7 +61,7 @@ async function autoScroll(page){
   });
 }
 async function scrape() {
-  const browser = await puppeteer.launch();
+  const browser = await launch();
   const page = await browser.newPage();
 
   await page.goto('https://twitter.com/jimcramer', {
@@ -108,14 +108,7 @@ async function scrape() {
 
   return tweets;
 }
-/* exports.helloWorld = functions.https.onRequest(async (request, response) => {
-  // test logic here
-
-  response.send('test');
-});
- */
-exports.getRichQuick = functions
-  .runWith({ memory: '4GB' })
+export const getRichQuick = runWith({ memory: '4GB' })
   .pubsub.schedule('0 10 * * 1-5')
   .timeZone('America/New_York')
   .onRun(async (ctx) => {
