@@ -17,7 +17,7 @@
     "eslint-plugin-async-await": "^0.0.0",
     "firebase-admin": "^13.4.0",
     "firebase-functions": "^6.4.0",
-    "openai": "^5.9.2",
+    "openai": "^5.12.0",
     "puppeteer": "^16.2.0"
   },
   "devDependencies": {
