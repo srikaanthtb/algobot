@@ -18,7 +18,7 @@
     "firebase-admin": "^13.7.0",
     "firebase-functions": "^7.0.6",
     "openai": "^6.27.0",
-    "puppeteer": "^16.2.0"
+    "puppeteer": "^24.39.1"
   },
   "devDependencies": {
     "eslint": "^10.0.2",
